@@ -1,8 +1,8 @@
 import math
 
 class Node:
-    def __init__(self, node_id, x, y, demand):
-        self.node_id = node_id
+    def __init__(self, ID, x, y, demand):
+        self.ID = ID
         self.x = x
         self.y = y
         self.demand = demand
@@ -15,11 +15,11 @@ with open('data.txt', 'r') as file:
     lines = file.readlines()
     for line in lines[5:]:  
         parts = line.strip().split(',')
-        node_id = int(parts[0])
+        ID = int(parts[0])
         x = int(parts[1])
         y = int(parts[2])
         demand = float(parts[3])
-        nodes.append(Node(node_id, x, y, demand))
+        nodes.append(Node(ID, x, y, demand))
 
 def distance(from_node, to_node):
     dx = from_node.x - to_node.x
@@ -39,4 +39,14 @@ def calculate_distance_matrix(nodes):
     return distance_matrix
 
 distance_matrix = calculate_distance_matrix(nodes)
+
+
+class Route:
+    def __init__(self, dp, cap):
+        self.sequenceOfNodes = []
+        self.sequenceOfNodes.append(dp)
+        self.sequenceOfNodes.append(dp)
+        self.cost = 0
+        self.capacity = cap
+        self.load = 0
 
