@@ -298,20 +298,35 @@ class Solver:
                             cost_added =0
                             cost_removed = 0
 
+                            cost_added_penalized = 0
+                            cost_removed_penalized = 0
+
+
                             if originNodeIndex < targetNodeIndex:
                                 #calculates the extra cost that occurs from the demand of the node 
                                 for i in range(originNodeIndex + 1, targetNodeIndex):
                                     nextnode = i + 1
                                     n1 = rt2.sequenceOfNodes[i]
                                     n2 = rt2.sequenceOfNodes[nextnode]
-                                    cost_added += B.demand * self.distanceMatrix[n1.ID][n2.ID]
+                                    cost_added += B.demand * self.distance_matrix[n1.ID][n2.ID]
+                                    cost_added_penalized += B.demand * self.distance_matrix[n1.ID][n2.ID]
                             #T=10
-                                cost_added += self.distanceMatrix[A.ID][C.ID] * (d_after_ornode + B.demand + 10)+ \
-                                    self.distanceMatrix[F.ID][B.ID] * (d_after_tarnode + B.demand + 10) + \
-                                    self.distanceMatrix[B.ID][G.ID] * (d_after_tarnode + 10)
-                                cost_removed = self.distanceMatrix[A.ID][B.ID] * (d_after_ornode + B.demand + 10) - \
-                                    self.distanceMatrix[B.ID][C.ID] * (d_after_ornode + 10) - \
-                                    self.distanceMatrix[F.ID][G.ID] * (d_after_tarnode + 10)
+                                cost_added += self.distance_matrix[A.ID][C.ID] * (d_after_ornode + B.demand + 10)+ \
+                                    self.distance_matrix[F.ID][B.ID] * (d_after_tarnode + B.demand + 10) + \
+                                    self.distance_matrix[B.ID][G.ID] * (d_after_tarnode + 10)
+                                cost_removed = self.distance_matrix[A.ID][B.ID] * (d_after_ornode + B.demand + 10) - \
+                                    self.distance_matrix[B.ID][C.ID] * (d_after_ornode + 10) - \
+                                    self.distance_matrix[F.ID][G.ID] * (d_after_tarnode + 10)
+                                
+
+                                cost_added_penalized += self.distance_matrix_penalized[A.ID][C.ID] * (d_after_ornode + B.demand + 10)+ \
+                                    self.distance_matrix_penalized[F.ID][B.ID] * (d_after_tarnode + B.demand + 10) + \
+                                    self.distance_matrix_penalized[B.ID][G.ID] * (d_after_tarnode + 10)
+                                cost_removed_penalized = self.distance_matrix_penalized[A.ID][B.ID] * (d_after_ornode + B.demand + 10) - \
+                                    self.distance_matrix_penalized[B.ID][C.ID] * (d_after_ornode + 10) - \
+                                    self.distance_matrix_penalized[F.ID][G.ID] * (d_after_tarnode + 10)
+                                
+
                             
 
                         #if targetNodeIndex< originNodeIndex
@@ -321,46 +336,81 @@ class Solver:
                                     nextnode = i + 1
                                     n1 = rt2.sequenceOfNodes[i]
                                     n2 = rt2.sequenceOfNodes[nextnode]
-                                    cost_removed += B.demand * self.distanceMatrix[n1.ID][n2.ID]
+                                    cost_removed += B.demand * self.distance_matrix[n1.ID][n2.ID]
+                                    cost_removed_penalized += B.demand * self.distance_matrix[n1.ID][n2.ID]
 
                             #T=10
-                                cost_added = self.distanceMatrix[A.ID][C.ID] * (d_after_ornode + 10)+ \
-                                    self.distanceMatrix[F.ID][B.ID] * (d_after_tarnode +  10) + \
-                                    self.distanceMatrix[B.ID][G.ID] * (d_after_tarnode - B.demand + 10)
-                                cost_removed += self.distanceMatrix[A.ID][B.ID] * (d_after_ornode + B.demand + 10) - \
-                                    self.distanceMatrix[B.ID][C.ID] * (d_after_ornode + 10) - \
-                                    self.distanceMatrix[F.ID][G.ID] * (d_after_tarnode + 10)
+                                cost_added = self.distance_matrix[A.ID][C.ID] * (d_after_ornode + 10)+ \
+                                    self.distance_matrix[F.ID][B.ID] * (d_after_tarnode +  10) + \
+                                    self.distance_matrix[B.ID][G.ID] * (d_after_tarnode - B.demand + 10)
+                                cost_removed += self.distance_matrix[A.ID][B.ID] * (d_after_ornode + B.demand + 10) - \
+                                    self.distance_matrix[B.ID][C.ID] * (d_after_ornode + 10) - \
+                                    self.distance_matrix[F.ID][G.ID] * (d_after_tarnode + 10)
+                                
+
+                        
+                                cost_added_penalized = self.distance_matrix_penalized[A.ID][C.ID] * (d_after_ornode + 10)+ \
+                                    self.distance_matrix_penalized[F.ID][B.ID] * (d_after_tarnode +  10) + \
+                                    self.distance_matrix_penalized[B.ID][G.ID] * (d_after_tarnode - B.demand + 10)
+                                cost_removed_penalized += self.distance_matrix_penalized[A.ID][B.ID] * (d_after_ornode + B.demand + 10) - \
+                                    self.distance_matrix_penalized[B.ID][C.ID] * (d_after_ornode + 10) - \
+                                    self.distance_matrix_penalized[F.ID][G.ID] * (d_after_tarnode + 10)
                             
                             
                             moveCost = cost_added - cost_removed
+
+                            originRtCostChange = moveCost
+                            targetRtCostChange = moveCost
+
+                            moveCost_penalized = cost_added_penalized - cost_removed_penalized
                         #if rt1 != rt2
                         else :
                             cost_rt1 = 0
                             cost_rt2 = 0
+                            cost_rt1_penalized = 0
+                            cost_rt2_penalized = 0
+
 
                             for i in range(0, originNodeIndex - 1):
                                 nextnode = i + 1
                                 n1 = rt1.sequenceOfNodes[i]
                                 n2 = rt1.sequenceOfNodes[nextnode]
-                                cost_rt1 -= B.demand * self.distanceMatrix[n1.ID][n2.ID]
+                                cost_rt1 -= B.demand * self.distance_matrix[n1.ID][n2.ID]
+                                cost_rt1_penalized -= B.demand * self.distance_matrix[n1.ID][n2.ID]
                             
-                            cost_rt1 += self.distanceMatrix[A.ID][C.ID] * (d_after_ornode + 10) - \
-                                self.distanceMatrix[A.ID][B.ID] * (d_after_ornode + B.demand + 10) - \
-                                self.distanceMatrix[B.ID][C.ID] * (d_after_ornode + 10)
+                            cost_rt1 += self.distance_matrix[A.ID][C.ID] * (d_after_ornode + 10) - \
+                                self.distance_matrix[A.ID][B.ID] * (d_after_ornode + B.demand + 10) - \
+                                self.distance_matrix[B.ID][C.ID] * (d_after_ornode + 10)
+                            
+                            originRtCostChange = cost_rt1
+                            
+
+                            cost_rt1_penalized += self.distance_matrix_penalized[A.ID][C.ID] * (d_after_ornode + 10) - \
+                                self.distance_matrix_penalized[A.ID][B.ID] * (d_after_ornode + B.demand + 10) - \
+                                self.distance_matrix_penalized[B.ID][C.ID] * (d_after_ornode + 10)
 
                             for i in range(0, targetNodeIndex):
                                 nextnode = i + 1
                                 n1 = rt2.sequenceOfNodes[i]
                                 n2 = rt2.sequenceOfNodes[nextnode]
-                                cost_rt2 += B.demand * self.distanceMatrix[n1.ID][n2.ID]
+                                cost_rt2 += B.demand * self.distance_matrix[n1.ID][n2.ID]
+                                cost_rt2_penalized += B.demand * self.distance_matrix[n1.ID][n2.ID]
 
-                            cost_rt2 += self.distanceMatrix[F.ID][B.ID] * (d_after_tarnode + B.demand + 10) + \
-                                self.distanceMatrix[B.ID][G.ID] * (d_after_tarnode + 10) - \
-                                self.distanceMatrix[F.ID][G.ID] * (d_after_tarnode + 10)
+                            cost_rt2 += self.distance_matrix[F.ID][B.ID] * (d_after_tarnode + B.demand + 10) + \
+                                self.distance_matrix[B.ID][G.ID] * (d_after_tarnode + 10) - \
+                                self.distance_matrix[F.ID][G.ID] * (d_after_tarnode + 10)
+                            
+                            targetRtCostChange = cost_rt2
+                            
+                            cost_rt2_penalized+= self.distance_matrix_penalized[F.ID][B.ID] * (d_after_tarnode + B.demand + 10) + \
+                                self.distance_matrix_penalized[B.ID][G.ID] * (d_after_tarnode + 10) - \
+                                self.distance_matrix_penalized[F.ID][G.ID] * (d_after_tarnode + 10)
 
-                            moveCost = cost_rt1 + cost_rt2
-                        #if (moveCost_penalized < rm.moveCost_penalized):
-                        if (moveCost < rm.moveCost):
+                            moveCost = originRtCostChange + targetRtCostChange
+
+                            moveCost_penalized = cost_rt1_penalized + cost_rt2_penalized
+                        if (moveCost_penalized < rm.moveCost_penalized):
+                        #if (moveCost < rm.moveCost):
                             self.StoreBestRelocationMove(originRouteIndex, targetRouteIndex, originNodeIndex,
                                                          targetNodeIndex, moveCost, moveCost_penalized, originRtCostChange,
                                                          targetRtCostChange, rm)
