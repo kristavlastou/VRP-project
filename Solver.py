@@ -1,6 +1,6 @@
-from VRP_Model import *
+from model import *
 from SolutionDrawer import *
-
+import random
 
 class Solution:
     def __init__(self):
@@ -97,13 +97,33 @@ class Solver:
         self.penalized_n1_ID = -1
         self.penalized_n2_ID = -1
 
+
+    def calc_tonne_kilometre(self, sol):
+        T = 8
+        route_sum_list = []
+        solution_tonne_kilometre_sum = 0
+        for rt in sol.routes:
+            route_sum = 0
+            for i in range(0, len(rt.sequenceOfNodes) - 1):
+                a = rt.sequenceOfNodes[i]
+                b = rt.sequenceOfNodes[i + 1]
+                demand_sum = 0
+                for j in range(i + 1, len(rt.sequenceOfNodes) - 1):
+                    c = rt.sequenceOfNodes[j]
+                    demand_sum += c.demand
+                demand_sum += T
+                route_sum += demand_sum * self.distance_matrix[a.ID][b.ID]
+                route_sum_list.append(route_sum)
+            solution_tonne_kilometre_sum += route_sum
+        return route_sum_list, solution_tonne_kilometre_sum
+
     def solve(self):
         self.SetRoutedFlagToFalseForAllCustomers()
         # self.ApplyNearestNeighborMethod()
-        self.MinimumInsertions()
+        self.MinimumInsertionsStochastic()
         self.ReportSolution(self.sol)
-        self.LocalSearch(2)
-        self.ReportSolution(self.sol)
+        # self.LocalSearch(2)
+        # self.ReportSolution(self.sol)
         return self.sol
 
     def SetRoutedFlagToFalseForAllCustomers(self):
@@ -148,39 +168,25 @@ class Solver:
                 rt = Route(self.depot, self.capacity)
                 self.sol.routes.append(rt)
 
-    def IdentifyMinimumCostInsertion(self, best_insertion):
-        for i in range(0, len(self.customers)):
-            candidateCust: Node = self.customers[i]
-            if candidateCust.isRouted is False:
-                for rt in self.sol.routes:
-                    if rt.load + candidateCust.demand <= rt.capacity:
-                        for j in range(0, len(rt.sequenceOfNodes) - 1):
-                            A = rt.sequenceOfNodes[j]
-                            B = rt.sequenceOfNodes[j + 1]
-                            costAdded = self.distance_matrix[A.ID][candidateCust.ID] + \
-                                        self.distance_matrix[candidateCust.ID][
-                                            B.ID]
-                            costRemoved = self.distance_matrix[A.ID][B.ID]
-                            trialCost = costAdded - costRemoved
-                            if trialCost < best_insertion.cost:
-                                best_insertion.customer = candidateCust
-                                best_insertion.route = rt
-                                best_insertion.insertionPosition = j
-                                best_insertion.cost = trialCost
-                    else:
-                        continue
-
-    def MinimumInsertions(self):
+    def MinimumInsertionsStochastic(self):
+        """
+        Constructs an initial solution using stochastic minimum insertions.
+        """
         model_is_feasible = True
         self.sol = Solution()
         insertions = 0
 
         while insertions < len(self.customers):
-            best_insertion = CustomerInsertionAllPositions()
+            # Always keep an empty route
             self.Always_keep_an_empty_route()
-            self.IdentifyMinimumCostInsertion(best_insertion)
 
-            if best_insertion.customer is not None:
+            # Gather all insertion candidates
+            candidates = self.IdentifyMinimumCostInsertionCandidates()
+
+            # Select the best insertion probabilistically
+            best_insertion = self.IdentifyMinimumCostInsertionStochastic(candidates)
+
+            if best_insertion is not None:
                 self.ApplyCustomerInsertionAllPositions(best_insertion)
                 insertions += 1
             else:
@@ -190,6 +196,62 @@ class Solver:
 
         if model_is_feasible:
             self.TestSolution()
+
+    def IdentifyMinimumCostInsertionCandidates(self):
+        """
+        Gathers all possible insertions and their costs.
+        Returns a list of tuples: (customer, route, position, cost).
+        """
+        candidates = []
+        for i in range(0, len(self.customers)):
+            candidateCust: Node = self.customers[i]
+            if candidateCust.isRouted is False:
+                for rt in self.sol.routes:
+                    if rt.load + candidateCust.demand <= rt.capacity:
+                        for j in range(0, len(rt.sequenceOfNodes) - 1):
+                            A = rt.sequenceOfNodes[j]
+                            B = rt.sequenceOfNodes[j + 1]
+                            costAdded = self.distance_matrix[A.ID][candidateCust.ID] + \
+                                        self.distance_matrix[candidateCust.ID][B.ID]
+                            costRemoved = self.distance_matrix[A.ID][B.ID]
+                            trialCost = costAdded - costRemoved
+                            candidates.append((candidateCust, rt, j, trialCost))
+                    else:
+                        continue
+        return candidates
+
+    def IdentifyMinimumCostInsertionStochastic(self, candidate_insertions):
+        """
+        Stochastic approach for the Minimum Insertions algorithm
+        Identifies a customer for insertion probabilistically based on cost
+        candidate_insertions: List of (customer, route, position, cost)
+        Returns a selected CustomerInsertionAllPositions object that represents the best insertion
+        """
+        random.seed(1)
+        # No candidate insertions --> no feasible solution
+        if not candidate_insertions:
+            return None
+
+        # Extract costs from matrix
+        costs = [insertion[3] for insertion in candidate_insertions]
+
+        # Normalize costs to probabilities (lower cost --> higher probability)
+        max_cost = max(costs)
+        exp_costs = [math.exp(-(cost - max_cost)) for cost in costs]
+        total = sum(exp_costs)
+        probabilities = [exp_cost / total for exp_cost in exp_costs]
+
+        # Select a candidate based on probabilities
+        selected_index = random.choices(range(len(candidate_insertions)), probabilities)[0]
+        selected_insertion = candidate_insertions[selected_index]
+
+        # Convert back to a CustomerInsertionAllPositions object
+        best_insertion = CustomerInsertionAllPositions()
+        best_insertion.customer = selected_insertion[0]
+        best_insertion.route = selected_insertion[1]
+        best_insertion.insertionPosition = selected_insertion[2]
+        best_insertion.cost = selected_insertion[3]
+        return best_insertion
 
     def LocalSearch(self, operator):
         random.seed(1)
@@ -441,12 +503,13 @@ class Solver:
             print('Cost Issue')
 
     def ReportSolution(self, sol):
+        route_tonne_kilometre, total_tonne_kilometre = self.calc_tonne_kilometre(sol)
         for i in range(0, len(sol.routes)):
             rt = sol.routes[i]
             for j in range(0, len(rt.sequenceOfNodes)):
                 print(rt.sequenceOfNodes[j].ID, end=' ')
-            print(rt.cost)
-        print(self.sol.cost)
+            print(route_tonne_kilometre[i])
+        print(total_tonne_kilometre)
 
     def GetLastOpenRoute(self):
         if len(self.sol.routes) == 0:
@@ -454,17 +517,43 @@ class Solver:
         else:
             return self.sol.routes[-1]
 
-    def IdentifyBestInsertion(self, bestInsertion, rt):
+    def IdentifyBestInsertion(self, bestInsertion, lastOpenRoute):
+        """
+            Identifies the best customer to insert into the last open route stochastically.
+            Parameters:
+                - lastOpenRoute: The last open route to which a customer will be inserted.
+        """
+        random.seed(1)
+        candidateInsertions = []
+        lastNodePresentInTheRoute = lastOpenRoute.sequenceOfNodes[-2]
         for i in range(0, len(self.customers)):
             candidateCust: Node = self.customers[i]
             if candidateCust.isRouted is False:
-                if rt.load + candidateCust.demand <= rt.capacity:
-                    lastNodePresentInTheRoute = rt.sequenceOfNodes[-2]
+                if lastOpenRoute.load + candidateCust.demand <= lastOpenRoute.capacity:
                     trialCost = self.distance_matrix[lastNodePresentInTheRoute.ID][candidateCust.ID]
-                    if trialCost < bestInsertion.cost:
-                        bestInsertion.customer = candidateCust
-                        bestInsertion.route = rt
-                        bestInsertion.cost = trialCost
+                    candidateInsertions.append((candidateCust, trialCost))
+                else:
+                    continue
+
+        if not candidateInsertions:
+            return
+
+        # Extract costs and normalize to probabilities
+        costs = [c[1] for c in candidateInsertions]
+        max_cost = max(costs)
+        exp_costs = [math.exp(-(cost - max_cost)) for cost in costs]
+        total = sum(exp_costs)
+        probabilities = [exp_cost / total for exp_cost in exp_costs]
+
+        # Stochastically select a customer
+        chosen_index = random.choices(range(len(candidateInsertions)), probabilities)[0]
+        chosen_customer = candidateInsertions[chosen_index][0]
+
+        # Update the bestInsertion object
+        bestInsertion.customer = chosen_customer
+        bestInsertion.route = lastOpenRoute
+        bestInsertion.insertionPosition = len(lastOpenRoute.sequenceOfNodes) - 2
+        bestInsertion.cost = candidateInsertions[chosen_index][1]
 
     def ApplyCustomerInsertion(self, insertion):
         insCustomer = insertion.customer
@@ -508,6 +597,7 @@ class Solver:
         sm.moveCost = moveCost
         sm.moveCost_penalized = moveCost_penalized
 
+# Allagh
     def CalculateTotalCost(self, sol):
         c = 0
         for i in range(0, len(sol.routes)):
