@@ -70,5 +70,4 @@ class Route:
         self.load = 0
 
 
-model = Model()
-model.BuildModel() 
+
