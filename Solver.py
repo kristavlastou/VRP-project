@@ -373,20 +373,20 @@ class Solver:
                                     cost_added += B.demand * self.distance_matrix[n1.ID][n2.ID]
                                     cost_added_penalized += B.demand * self.distance_matrix[n1.ID][n2.ID]
                             #T=10
-                                cost_added += self.distance_matrix[A.ID][C.ID] * (d_after_ornode + B.demand + 10)+ \
-                                    self.distance_matrix[F.ID][B.ID] * (d_after_tarnode + B.demand + 10) + \
-                                    self.distance_matrix[B.ID][G.ID] * (d_after_tarnode + 10)
-                                cost_removed = self.distance_matrix[A.ID][B.ID] * (d_after_ornode + B.demand + 10) - \
-                                    self.distance_matrix[B.ID][C.ID] * (d_after_ornode + 10) - \
-                                    self.distance_matrix[F.ID][G.ID] * (d_after_tarnode + 10)
+                                cost_added += self.distance_matrix[A.ID][C.ID] * (d_after_ornode + B.demand + 8)+ \
+                                    self.distance_matrix[F.ID][B.ID] * (d_after_tarnode + B.demand + 8) + \
+                                    self.distance_matrix[B.ID][G.ID] * (d_after_tarnode + 8)
+                                cost_removed = self.distance_matrix[A.ID][B.ID] * (d_after_ornode + B.demand + 8) - \
+                                    self.distance_matrix[B.ID][C.ID] * (d_after_ornode + 8) - \
+                                    self.distance_matrix[F.ID][G.ID] * (d_after_tarnode + 8)
                                 
 
-                                cost_added_penalized += self.distance_matrix_penalized[A.ID][C.ID] * (d_after_ornode + B.demand + 10)+ \
-                                    self.distance_matrix_penalized[F.ID][B.ID] * (d_after_tarnode + B.demand + 10) + \
-                                    self.distance_matrix_penalized[B.ID][G.ID] * (d_after_tarnode + 10)
-                                cost_removed_penalized = self.distance_matrix_penalized[A.ID][B.ID] * (d_after_ornode + B.demand + 10) - \
-                                    self.distance_matrix_penalized[B.ID][C.ID] * (d_after_ornode + 10) - \
-                                    self.distance_matrix_penalized[F.ID][G.ID] * (d_after_tarnode + 10)
+                                cost_added_penalized += self.distance_matrix_penalized[A.ID][C.ID] * (d_after_ornode + B.demand + 8)+ \
+                                    self.distance_matrix_penalized[F.ID][B.ID] * (d_after_tarnode + B.demand + 8) + \
+                                    self.distance_matrix_penalized[B.ID][G.ID] * (d_after_tarnode + 8)
+                                cost_removed_penalized = self.distance_matrix_penalized[A.ID][B.ID] * (d_after_ornode + B.demand + 8) - \
+                                    self.distance_matrix_penalized[B.ID][C.ID] * (d_after_ornode + 8) - \
+                                    self.distance_matrix_penalized[F.ID][G.ID] * (d_after_tarnode + 8)
                                 
 
                             
@@ -402,21 +402,21 @@ class Solver:
                                     cost_removed_penalized += B.demand * self.distance_matrix[n1.ID][n2.ID]
 
                             #T=10
-                                cost_added = self.distance_matrix[A.ID][C.ID] * (d_after_ornode + 10)+ \
-                                    self.distance_matrix[F.ID][B.ID] * (d_after_tarnode +  10) + \
-                                    self.distance_matrix[B.ID][G.ID] * (d_after_tarnode - B.demand + 10)
-                                cost_removed += self.distance_matrix[A.ID][B.ID] * (d_after_ornode + B.demand + 10) - \
-                                    self.distance_matrix[B.ID][C.ID] * (d_after_ornode + 10) - \
-                                    self.distance_matrix[F.ID][G.ID] * (d_after_tarnode + 10)
+                                cost_added = self.distance_matrix[A.ID][C.ID] * (d_after_ornode + 8)+ \
+                                    self.distance_matrix[F.ID][B.ID] * (d_after_tarnode +  8) + \
+                                    self.distance_matrix[B.ID][G.ID] * (d_after_tarnode - B.demand + 8)
+                                cost_removed += self.distance_matrix[A.ID][B.ID] * (d_after_ornode + B.demand + 8) - \
+                                    self.distance_matrix[B.ID][C.ID] * (d_after_ornode + 8) - \
+                                    self.distance_matrix[F.ID][G.ID] * (d_after_tarnode + 8)
                                 
 
                         
-                                cost_added_penalized = self.distance_matrix_penalized[A.ID][C.ID] * (d_after_ornode + 10)+ \
-                                    self.distance_matrix_penalized[F.ID][B.ID] * (d_after_tarnode +  10) + \
-                                    self.distance_matrix_penalized[B.ID][G.ID] * (d_after_tarnode - B.demand + 10)
-                                cost_removed_penalized += self.distance_matrix_penalized[A.ID][B.ID] * (d_after_ornode + B.demand + 10) - \
-                                    self.distance_matrix_penalized[B.ID][C.ID] * (d_after_ornode + 10) - \
-                                    self.distance_matrix_penalized[F.ID][G.ID] * (d_after_tarnode + 10)
+                                cost_added_penalized = self.distance_matrix_penalized[A.ID][C.ID] * (d_after_ornode + 8)+ \
+                                    self.distance_matrix_penalized[F.ID][B.ID] * (d_after_tarnode +  8) + \
+                                    self.distance_matrix_penalized[B.ID][G.ID] * (d_after_tarnode - B.demand + 8)
+                                cost_removed_penalized += self.distance_matrix_penalized[A.ID][B.ID] * (d_after_ornode + B.demand + 8) - \
+                                    self.distance_matrix_penalized[B.ID][C.ID] * (d_after_ornode + 8) - \
+                                    self.distance_matrix_penalized[F.ID][G.ID] * (d_after_tarnode + 8)
                             
                             
                             moveCost = cost_added - cost_removed
@@ -440,16 +440,16 @@ class Solver:
                                 cost_rt1 -= B.demand * self.distance_matrix[n1.ID][n2.ID]
                                 cost_rt1_penalized -= B.demand * self.distance_matrix[n1.ID][n2.ID]
                             
-                            cost_rt1 += self.distance_matrix[A.ID][C.ID] * (d_after_ornode + 10) - \
-                                self.distance_matrix[A.ID][B.ID] * (d_after_ornode + B.demand + 10) - \
-                                self.distance_matrix[B.ID][C.ID] * (d_after_ornode + 10)
+                            cost_rt1 += self.distance_matrix[A.ID][C.ID] * (d_after_ornode + 8) - \
+                                self.distance_matrix[A.ID][B.ID] * (d_after_ornode + B.demand + 8) - \
+                                self.distance_matrix[B.ID][C.ID] * (d_after_ornode + 8)
                             
                             originRtCostChange = cost_rt1
                             
 
-                            cost_rt1_penalized += self.distance_matrix_penalized[A.ID][C.ID] * (d_after_ornode + 10) - \
-                                self.distance_matrix_penalized[A.ID][B.ID] * (d_after_ornode + B.demand + 10) - \
-                                self.distance_matrix_penalized[B.ID][C.ID] * (d_after_ornode + 10)
+                            cost_rt1_penalized += self.distance_matrix_penalized[A.ID][C.ID] * (d_after_ornode + 8) - \
+                                self.distance_matrix_penalized[A.ID][B.ID] * (d_after_ornode + B.demand + 8) - \
+                                self.distance_matrix_penalized[B.ID][C.ID] * (d_after_ornode + 8)
 
                             for i in range(0, targetNodeIndex):
                                 nextnode = i + 1
@@ -458,15 +458,15 @@ class Solver:
                                 cost_rt2 += B.demand * self.distance_matrix[n1.ID][n2.ID]
                                 cost_rt2_penalized += B.demand * self.distance_matrix[n1.ID][n2.ID]
 
-                            cost_rt2 += self.distance_matrix[F.ID][B.ID] * (d_after_tarnode + B.demand + 10) + \
-                                self.distance_matrix[B.ID][G.ID] * (d_after_tarnode + 10) - \
-                                self.distance_matrix[F.ID][G.ID] * (d_after_tarnode + 10)
+                            cost_rt2 += self.distance_matrix[F.ID][B.ID] * (d_after_tarnode + B.demand + 8) + \
+                                self.distance_matrix[B.ID][G.ID] * (d_after_tarnode + 8) - \
+                                self.distance_matrix[F.ID][G.ID] * (d_after_tarnode + 8)
                             
                             targetRtCostChange = cost_rt2
                             
-                            cost_rt2_penalized+= self.distance_matrix_penalized[F.ID][B.ID] * (d_after_tarnode + B.demand + 10) + \
-                                self.distance_matrix_penalized[B.ID][G.ID] * (d_after_tarnode + 10) - \
-                                self.distance_matrix_penalized[F.ID][G.ID] * (d_after_tarnode + 10)
+                            cost_rt2_penalized+= self.distance_matrix_penalized[F.ID][B.ID] * (d_after_tarnode + B.demand + 8) + \
+                                self.distance_matrix_penalized[B.ID][G.ID] * (d_after_tarnode + 8) - \
+                                self.distance_matrix_penalized[F.ID][G.ID] * (d_after_tarnode + 8)
 
                             moveCost = originRtCostChange + targetRtCostChange
 
