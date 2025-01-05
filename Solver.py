@@ -729,17 +729,17 @@ class Solver:
                 rd2 = 8
                 dmdl = []
                 for nodeInd1 in range(len(rt1.sequenceOfNodes) - 1, 0, -1):
-                    reloc1.append(nodeInd1)
-                    rd1 = rd1 + nodeInd1.demand
+                    reloc1.append(rt1.sequenceOfNodes[nodeInd1])
+                    rd1 = rd1 + rt1.sequenceOfNodes[nodeInd1].demand
                     start2 = 0
                     if (rt1 == rt2):
                         
                         start2 = nodeInd1 + 2
 
                     for nodeInd2 in range(len(rt2.sequenceOfNodes) - 1, start2, -1):
-                        reloc2.append(nodeInd2)
-                        rd2 = rd2 + nodeInd2.demand
-                        dmdl.append(nodeInd2.demand)
+                        reloc2.append(rt2.sequenceOfNodes[nodeInd2])
+                        rd2 = rd2 + rt2.sequenceOfNodes[nodeInd2].demand
+                        dmdl.append(rt2.sequenceOfNodes[nodeInd2].demand)
 
                         moveCost = 10 ** 9
                         moveCost_penalized = 10 ** 9
