@@ -718,132 +718,114 @@ class Solver:
         sm.Initialize()
         top.Initialize()
 
-    def FindBestTwoOptMove(self, top):
+    def FindBestTwoOptMove(self, top, cost_of_segment_to_be=None):
         for rtInd1 in range(0, len(self.sol.routes)):
             rt1: Route = self.sol.routes[rtInd1]
-            reloc1 = []
-            rd1 = 8
             for rtInd2 in range(rtInd1, len(self.sol.routes)):
                 rt2: Route = self.sol.routes[rtInd2]
-                reloc2 = []
-                rd2 = 8
-                dmdl = []
-                for nodeInd1 in range(len(rt1.sequenceOfNodes) - 1, 0, -1):
-                    reloc1.append(rt1.sequenceOfNodes[nodeInd1])
-                    rd1 = rd1 + rt1.sequenceOfNodes[nodeInd1].demand
+                for nodeInd1 in range(0, len(rt1.sequenceOfNodes) - 1):
                     start2 = 0
                     if (rt1 == rt2):
-                        
                         start2 = nodeInd1 + 2
-
-                    for nodeInd2 in range(len(rt2.sequenceOfNodes) - 1, start2, -1):
-                        reloc2.append(rt2.sequenceOfNodes[nodeInd2])
-                        rd2 = rd2 + rt2.sequenceOfNodes[nodeInd2].demand
-                        dmdl.append(rt2.sequenceOfNodes[nodeInd2].demand)
-
-                        moveCost = 10 ** 9
-                        moveCost_penalized = 10 ** 9
-
+    
+                    for nodeInd2 in range(start2, len(rt2.sequenceOfNodes) - 1):
+    
+    
                         A = rt1.sequenceOfNodes[nodeInd1]
                         B = rt1.sequenceOfNodes[nodeInd1 + 1]
                         K = rt2.sequenceOfNodes[nodeInd2]
                         L = rt2.sequenceOfNodes[nodeInd2 + 1]
-
+    
                         if rt1 == rt2:
                             if nodeInd1 == 0 and nodeInd2 == len(rt1.sequenceOfNodes) - 2:
                                 continue
-                            
-                            reversed = list(reversed(rt1.sequenceOfNodes[nodeInd1 + 1: nodeInd2 + 1]))
-                            
-
+    
+                            rd1 = self.CalcRD(rt1, nodeInd1)
+                            rd2 = self.CalcRD(rt2, nodeInd2)
+    
                             extrac1 = 0
-                            extrac1_pen = 0
-                            current_load = rd2 - L.demand + B.demand
-                            for i in range(len(reversed) - 1, 0, -1):
-                                n2 = reversed[i]
-                                n1 = reversed[i - 1]
+                            current_load = rd2 + B.demand
+                            for i in range(nodeInd1 + 1, nodeInd2):
+                                n1 = rt1.sequenceOfNodes[i]
+                                n2 = rt1.sequenceOfNodes[i + 1]
                                 extrac1 += current_load * self.distance_matrix[n1.ID][n2.ID]
-                                extrac1_pen += current_load * self.distance_matrix_penalized[n1.ID][n2.ID]
-                                current_load += n1.demand
-
-                            current_load = rd2 - L.demand + K.demand
+                                current_load += n2.demand
+    
+                            current_load = rd2 + K.demand
                             for i in range(nodeInd2, nodeInd1 + 1, -1):
                                 n2 = rt1.sequenceOfNodes[i]
                                 n1 = rt1.sequenceOfNodes[i - 1]
                                 extrac1 -= current_load * self.distance_matrix[n1.ID][n2.ID]
-                                extrac1_pen -= current_load * self.distance_matrix_penalized[n1.ID][n2.ID]
                                 current_load += n1.demand
-
-
+    
+    
                             cost = 0
-
-                            cost += self.distance_matrix[A.ID][K.ID] * (rd1 - A.demand) + \
-                                                self.distance_matrix[B.ID][L.ID] * (rd2) - \
-                                                self.distance_matrix[A.ID][B.ID] * (rd1 - A.demand) - \
-                                                self.distance_matrix[K.ID][L.ID] * (rd2 - L.demand)
+    
+                            cost += self.distance_matrix[A.ID][K.ID] * (rd1) + \
+                                                self.distance_matrix[B.ID][L.ID] * (rd2 ) - \
+                                                self.distance_matrix[A.ID][B.ID] * (rd1 ) - \
+                                                self.distance_matrix[K.ID][L.ID] * (rd2 )
                             moveCost = cost + extrac1
-
-                            cost_pen = 0
-                            cost_pen += self.distance_matrix_penalized[A.ID][K.ID] * (rd1 - A.demand) + \
-                                                self.distance_matrix_penalized[B.ID][L.ID] * (rd2) - \
-                                                self.distance_matrix_penalized[A.ID][B.ID] * (rd1 - A.demand) - \
-                                                self.distance_matrix_penalized[K.ID][L.ID] * (rd2 - L.demand)
-                            moveCost_penalized = cost_pen + extrac1_pen
-                            
                         else:
                             if nodeInd1 == 0 and nodeInd2 == 0:
                                 continue
                             if nodeInd1 == len(rt1.sequenceOfNodes) - 2 and nodeInd2 == len(rt2.sequenceOfNodes) - 2:
                                 continue
-
-                            if self.CapacityIsViolated(rt1, nodeInd1, rt2, nodeInd2):
+        
+                            rd1 = self.CalcRD(rt1, nodeInd1 - 1)
+                            rd2 = self.CalcRD(rt2, nodeInd2 - 1)
+    
+                            if self.CapacityIsViolated(rt1, nodeInd1, rt2, nodeInd2, rd1, rd2):
                                 continue
-
-                            extrac1 = 0
-                            extrac1_pen = 0
+    
+    
+                            cost_cummulative_change_rt1 = 0
                             for i in range(0, nodeInd1):
+                                next = i + 1
                                 n1 = rt1.sequenceOfNodes[i]
-                                n2 = rt1.sequenceOfNodes[i + 1]
-                                extrac1 += (rd2 - rd1) * self.distance_matrix[n1.ID][n2.ID]
-                                extrac1_pen += (rd2 - rd1) * self.distance_matrix_penalized[n1.ID][n2.ID] 
-
-                            extrac2 = 0
-                            extrac2_pen = 0
+                                n2 = rt1.sequenceOfNodes[next]
+                                cost_cummulative_change_rt1 += rd2 * self.distance_matrix[n1.ID][n2.ID] - \
+                                                                rd1 * self.distance_matrix[n1.ID][n2.ID]
+    
+                            cost_cummulative_change_rt2 = 0
                             for i in range(0, nodeInd2):
-                                n1 = rt1.sequenceOfNodes[i]
-                                n2 = rt1.sequenceOfNodes[i + 1] 
-                                extrac2 += (rd1 - rd2) * self.distance_matrix[n1.ID][n2.ID]
-                                extrac2_pen += (rd1 - rd2) * self.distance_matrix_penalized[n1.ID][n2.ID] 
+                                next = i + 1
+                                n1 = rt2.sequenceOfNodes[i]
+                                n2 = rt2.sequenceOfNodes[next]
+                                cost_cummulative_change_rt2 += rd1 * self.distance_matrix[n1.ID][n2.ID] - \
+                                                                rd2 * self.distance_matrix[n1.ID][n2.ID]
+    
+                            costAdded = self.distance_matrix[A.ID][L.ID] * rd2 + \
+                                        self.distance_matrix[K.ID][B.ID] * rd1
+                            costRemoved = self.distance_matrix[A.ID][B.ID] * rd1 + \
+                                            self.distance_matrix[K.ID][L.ID] * rd2
+    
+                            moveCost = costAdded - costRemoved + \
+                                        cost_cummulative_change_rt1 + cost_cummulative_change_rt2
+    
+                        if moveCost < top.moveCost and abs(moveCost) > 0.0001:
+                            self.StoreBestTwoOptMove(rtInd1, rtInd2, nodeInd1, nodeInd2, moveCost, top)
 
-                            costAdded = self.distance_matrix[A.ID][L.ID] * rd2 + self.distance_matrix[B.ID][K.ID] * rd1
-                            costRemoved = self.distance_matrix[A.ID][B.ID] * rd1 + self.distance_matrix[K.ID][L.ID] * rd2
-                            costAdded_penalized = self.distance_matrix_penalized[A.ID][L.ID] * rd2 + self.distance_matrix_penalized[B.ID][K.ID] * rd1
-                            costRemoved_penalized = self.distance_matrix_penalized[A.ID][B.ID] * rd1 + self.distance_matrix_penalized[K.ID][L.ID] * rd2
-                            
-                            moveCost_penalized = costAdded_penalized - costRemoved_penalized + extrac1_pen + extrac2_pen
-                            
-                            moveCost = costAdded - costRemoved + extrac1 + extrac2
+    def CalcRD(self, rt, nodeInd):
+        rd = 8
+        for i in range(len(rt.sequenceOfNodes) - 1, nodeInd - 1, -1):     
+            rd = rd + rt.sequenceOfNodes[i].demand
 
-                        if moveCost_penalized < top.moveCost_penalized:
-                            self.StoreBestTwoOptMove(rtInd1, rtInd2, nodeInd1, nodeInd2, moveCost, moveCost_penalized, top)
+        return rd
 
-    def CapacityIsViolated(self, rt1, nodeInd1, rt2, nodeInd2):
+    def CapacityIsViolated(self, rt1, nodeInd1, rt2, nodeInd2, rd1, rd2):
 
-        rt1FirstSegmentLoad = 0
-        for i in range(0, nodeInd1 + 1):
-            n = rt1.sequenceOfNodes[i]
-            rt1FirstSegmentLoad += n.demand
-        rt1SecondSegmentLoad = rt1.load - rt1FirstSegmentLoad
 
-        rt2FirstSegmentLoad = 0
-        for i in range(0, nodeInd2 + 1):
-            n = rt2.sequenceOfNodes[i]
-            rt2FirstSegmentLoad += n.demand
-        rt2SecondSegmentLoad = rt2.load - rt2FirstSegmentLoad
+        rt1FirstSegmentLoad = rt1.load - rd1 + rt1.sequenceOfNodes[nodeInd1].demand
+        rt1SecondSegmentLoad = rd1 - rt1.sequenceOfNodes[nodeInd1].demand
 
-        if (rt1FirstSegmentLoad + rt2SecondSegmentLoad > rt1.capacity):
+        rt2FirstSegmentLoad = rt2.load - rd2 + rt2.sequenceOfNodes[nodeInd2].demand
+        rt2SecondSegmentLoad = rd2 - rt2.sequenceOfNodes[nodeInd2].demand
+
+
+        if rt1FirstSegmentLoad + rt2SecondSegmentLoad > rt1.capacity:
             return True
-        if (rt2FirstSegmentLoad + rt1SecondSegmentLoad > rt2.capacity):
+        if rt2FirstSegmentLoad + rt1SecondSegmentLoad > rt2.capacity:
             return True
 
         return False
