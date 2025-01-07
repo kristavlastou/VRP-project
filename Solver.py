@@ -100,21 +100,15 @@ class Solver:
 
     def calc_tonne_kilometre_route(self, rt):
         nodes_sequence = rt.sequenceOfNodes
-        # for i in range(0, len(rt.sequenceOfNodes) - 1):
-        #     a = rt.sequenceOfNodes[i]
-        #     b = rt.sequenceOfNodes[i + 1]
-        #     load_sum = sum(n.demand for n in rt.sequenceOfNodes[i + 1: len(rt.sequenceOfNodes) - 1]) + 8
-        #     rt.cost += load_sum * self.distance_matrix[a.ID][b.ID]
-        # return rt.cost
         tot_dem = sum(n.demand for n in nodes_sequence)
         tot_load = 8 + tot_dem
         tn_km = 0
-       for i in range(len(nodes_sequence) - 1):
+        for i in range(len(nodes_sequence) - 1):
            from_node = nodes_sequence[i]
            to_node = nodes_sequence[i + 1]
            tn_km += self.distance_matrix[from_node.ID][to_node.ID] * tot_load
            tot_load -= to_node.demand
-       return tn_km
+        return tn_km
 
 
     def calc_tonne_kilometre_total(self, sol):
@@ -127,8 +121,8 @@ class Solver:
 
     def solve(self):
         self.SetRoutedFlagToFalseForAllCustomers()
-        # self.ApplyNearestNeighborMethod()
-        self.MinimumInsertionsStochastic()
+        self.ApplyNearestNeighborMethod()
+        # self.MinimumInsertionsStochastic()
         self.ReportSolution(self.sol)
         # self.LocalSearch(2)
         # self.ReportSolution(self.sol)
@@ -312,7 +306,7 @@ class Solver:
                 print(localSearchIterator, self.bestSolution.cost)
 
             localSearchIterator = localSearchIterator + 1
-            if localSearchIterator == 5000:
+            if localSearchIterator == 1000:
                 terminationCondition = True
 
         self.sol = self.bestSolution
