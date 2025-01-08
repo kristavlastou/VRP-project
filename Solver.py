@@ -559,7 +559,7 @@ class Solver:
 
     def ApplyRelocationMove(self, rm: RelocationMove):
 
-        oldCost = self.CalculateTotalCost(self.sol)
+        # oldCost = self.CalculateTotalCost(self.sol)
 
         originRt = self.sol.routes[rm.originRoutePosition]
         targetRt = self.sol.routes[rm.targetRoutePosition]
@@ -584,10 +584,10 @@ class Solver:
 
         self.sol.cost += rm.moveCost
 
-        newCost = self.CalculateTotalCost(self.sol)
+        # newCost = self.CalculateTotalCost(self.sol)
         # debuggingOnly
-        if abs((newCost - oldCost) - rm.moveCost) > 0.0001:
-            print('Cost Issue')
+        # if abs((newCost - oldCost) - rm.moveCost) > 0.0001:
+        #     print('Cost Issue')
 
     def ApplySwapMove(self, sm):
         oldCost = self.CalculateTotalCost(self.sol)
@@ -608,10 +608,10 @@ class Solver:
 
         self.sol.cost += sm.moveCost
 
-        newCost = self.CalculateTotalCost(self.sol)
-        # debuggingOnly
-        if abs((newCost - oldCost) - sm.moveCost) > 0.0001:
-            print('Cost Issue')
+        # newCost = self.CalculateTotalCost(self.sol)
+        # # debuggingOnly
+        # if abs((newCost - oldCost) - sm.moveCost) > 0.0001:
+        #     print('Cost Issue')
 
     def ReportSolution(self, sol):
         total_tonne_kilometre = self.calc_tonne_kilometre_total(sol)
