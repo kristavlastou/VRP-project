@@ -547,7 +547,7 @@ class Solver:
             to_node = nodes_sequence[i + 1]
             tn_km += self.distance_matrix[from_node.ID][to_node.ID] * tot_load
             tot_load -= to_node.demand
-        return tn_km
+        return tn_km, tot_dem
 
     def ApplyRelocationMove(self, rm: RelocationMove):
 
