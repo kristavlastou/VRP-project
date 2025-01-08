@@ -967,3 +967,14 @@ class Solver:
         self.distance_matrix_penalized[pen_2][pen_1] = (1 + pen_weight * self.times_penalized[pen_2][pen_1]) * self.distance_matrix[pen_2][pen_1]
         self.penalized_n1_ID = pen_1
         self.penalized_n2_ID = pen_2
+
+def write_to_file(solution, output_file):
+    with open(output_file, 'w') as file:
+        file.write(f'Cost:\n{solution.cost}\n')
+        file.write('Routes:\n')
+        file.write(str(len(solution.routes)) + '\n')
+        for route in solution.routes:
+            route_str = '0'
+            for node in route.sequenceOfNodes[1:len(route.sequenceOfNodes)-1]:  # The first node in each route is 0 and should not be repeated
+                route_str += ',' + str(node.ID)
+            file.write(route_str + '\n')
