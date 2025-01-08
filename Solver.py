@@ -125,6 +125,7 @@ class Solver:
         self.ApplyNearestNeighborMethod()
         # self.MinimumInsertionsStochastic()
         self.ReportSolution(self.sol)
+        self.VND()
         # self.LocalSearch(2)
         # self.ReportSolution(self.sol)
         return self.sol
@@ -960,8 +961,8 @@ class Solver:
         self.penalized_n1_ID = pen_1
         self.penalized_n2_ID = pen_2
 
-def write_to_file(solution, output_file):
-    with open(output_file, 'w') as file:
+    def write_to_file(solution, output_file):
+        with open(output_file, 'w') as file:
         file.write(f'Cost:\n{solution.cost}\n')
         file.write('Routes:\n')
         file.write(str(len(solution.routes)) + '\n')
@@ -970,3 +971,63 @@ def write_to_file(solution, output_file):
             for node in route.sequenceOfNodes[1:len(route.sequenceOfNodes)-1]:  # The first node in each route is 0 and should not be repeated
                 route_str += ',' + str(node.ID)
             file.write(route_str + '\n')
+
+
+
+
+    def VND(self):
+        
+        self.bestSolution = self.cloneSolution(self.sol)
+        kmax = 2
+        rm = RelocationMove()
+        sm = SwapMove()
+        top = TwoOptMove()
+
+        k = 0 
+
+        while k < kmax:
+            
+            self.InitializeOperators(rm, sm, top)
+            # SolDrawer.draw(localSearchIterator, self.sol, self.allNodes)
+            # Relocations
+            if k == 0:
+               
+               self.FindBestRelocationMove(rm)
+               if rm.originRoutePosition is not None and rm.moveCost < 0 : 
+                    self.ApplyRelocationMove(rm)
+                    k = 0  
+               else:
+                    #self.penalize_arcs()  
+                    k += 1  
+
+            # Swaps
+            elif k == 1:
+
+              self.FindBestSwapMove(sm)
+              if sm.positionOfFirstRoute is not None and sm.moveCost < 0 :
+                    self.ApplySwapMove(sm)
+                    k = 0  
+              else:
+                    # self.penalize_arcs()  
+                    k += 1  
+   
+
+            elif k == 2:
+                self.FindBestTwoOptMove(top)
+                if top.positionOfFirstRoute is not None and top.moveCost:
+                        self.ApplyTwoOptMove(top)
+                        k = 0  
+                else:
+                        # self.penalize_arcs()  
+                        k += 1 
+
+
+            # self.TestSolution()
+
+            if (self.sol.cost < self.bestSolution.cost):
+                self.bestSolution = self.cloneSolution(self.sol)
+               
+
+
+        self.sol = self.bestSolution
+        # SolDrawer.draw(self.bestSolution.cost, self.sol, self.allNodes)
