@@ -1,0 +1,42 @@
+  def distance(self, from_node, to_node):
+      dx = from_node.x - to_node.x
+      dy = from_node.y - to_node.y
+      dist = math.sqrt(dx ** 2 + dy ** 2)
+      return dist
+
+  def calculate_route_details(self, rt, empty_vehicle_weight):
+      tot_dem = sum(n.demand for n in rt.sequenceOfNodes)
+      tot_load = empty_vehicle_weight + tot_dem
+      tn_km = 0
+      for i in range(len(rt.sequenceOfNodes) - 1):
+          from_node = rt.sequenceOfNodes[i]
+          to_node = rt.sequenceOfNodes[i + 1]
+          tn_km += self.distance(from_node, to_node) * tot_load
+          tot_load -= to_node.demand
+      return tn_km, tot_dem
+
+def ReportSolution(self, sol):
+        objective_calculated = 0
+
+        times_visited = {}
+        times_visited[0] = 0
+        for i in range(1, len(self.allNodes)):
+            n: Node = self.allNodes[i]
+            times_visited[n.ID] = 0
+
+        for rt in sol.routes:
+            rt_tn_km, rt_load = self.calculate_route_details(rt, 8)
+            times_visited[0] = 0
+            for nn in range(1, len(rt.sequenceOfNodes)):
+                n_in: Node = rt.sequenceOfNodes[nn]
+                times_visited[n_in.ID] += 1
+                # check capacity constraints
+                if rt_load > 10:
+                    print('Capacity violation. Route', rt, 'total load is', rt_load)
+                    return
+            objective_calculated += rt_tn_km
+
+        # check solution objective
+        print('--- Cost Calculated', objective_calculated)
+        # everything is ok
+        print('Solution is ΟΚ. Total Cost:', objective_calculated)
