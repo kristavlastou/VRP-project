@@ -12,7 +12,7 @@ class Model:
 
     def BuildModel(self):
         
-        with open('data.txt', 'r') as file:  
+        with open('Instance.txt', 'r') as file:  
          lines = file.readlines()
          for line in lines[5:]:  
             parts = line.strip().split(',')
