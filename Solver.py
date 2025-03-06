@@ -1,7 +1,7 @@
 from model import *
 from SolutionDrawer import *
 import random
-import heapq
+
 
 class Solution:
     def __init__(self):
@@ -18,7 +18,7 @@ class RelocationMove(object):
         self.costChangeOriginRt = None
         self.costChangeTargetRt = None
         self.moveCost = None
-        #self.moveCost_penalized = None
+        # self.moveCost_penalized = None
 
     def Initialize(self):
         self.originRoutePosition = None
@@ -28,7 +28,8 @@ class RelocationMove(object):
         self.costChangeOriginRt = None
         self.costChangeTargetRt = None
         self.moveCost = 10 ** 9
-        #self.moveCost_penalized = 10 ** 9
+        # self.moveCost_penalized = 10 ** 9
+
 
 class SwapMove(object):
     def __init__(self):
@@ -39,7 +40,7 @@ class SwapMove(object):
         self.costChangeFirstRt = None
         self.costChangeSecondRt = None
         self.moveCost = None
-        #self.moveCost_penalized = None
+        # self.moveCost_penalized = None
 
     def Initialize(self):
         self.positionOfFirstRoute = None
@@ -49,7 +50,8 @@ class SwapMove(object):
         self.costChangeFirstRt = None
         self.costChangeSecondRt = None
         self.moveCost = 10 ** 9
-        #self.moveCost_penalized = 10 ** 9
+        # self.moveCost_penalized = 10 ** 9
+
 
 class TwoOptMove(object):
     def __init__(self):
@@ -58,7 +60,7 @@ class TwoOptMove(object):
         self.positionOfFirstNode = None
         self.positionOfSecondNode = None
         self.moveCost = None
-        #self.moveCost_penalized = None
+        # self.moveCost_penalized = None
 
     def Initialize(self):
         self.positionOfFirstRoute = None
@@ -66,7 +68,7 @@ class TwoOptMove(object):
         self.positionOfFirstNode = None
         self.positionOfSecondNode = None
         self.moveCost = 10 ** 9
-        #self.moveCost_penalized = 10 ** 9
+        # self.moveCost_penalized = 10 ** 9
 
 
 class CustomerInsertion(object):
@@ -75,12 +77,20 @@ class CustomerInsertion(object):
         self.route = None
         self.cost = 10 ** 9
 
+
 class CustomerInsertionAllPositions(object):
     def __init__(self):
         self.customer = None
         self.route = None
         self.insertionPosition = None
         self.cost = 10 ** 9
+
+
+class Saving:
+    def __init__(self, n1, n2, sav):
+        self.n1 = n1
+        self.n2 = n2
+        self.score = sav
 
 
 class Solver:
@@ -98,124 +108,51 @@ class Solver:
         # self.penalized_n1_ID = -1
         # self.penalized_n2_ID = -1
 
+    def distance(self,from_node, to_node):
+        dx = from_node.x - to_node.x
+        dy = from_node.y - to_node.y
+        dist = math.sqrt(dx ** 2 + dy ** 2)
+        return dist
 
-    def Clarke_n_Wright(self):
-    self.sol = self.create_initial_routes()
-    savings: list = self.calculate_savings()
-    savings.sort(key=lambda s: s.score, reverse=True)
-    for i in range(0, len(savings)):
-        sav = savings[i]
-        n1 = sav.n1
-        n2 = sav.n2
-        rt1 = n1.route
-        rt2 = n2.route
-
-        if n1.route == n2.route:
-            continue
-        if self.not_first_or_last(rt1, n1) or self.not_first_or_last(rt2, n2):
-            continue
-        if rt1.load + rt2.load > self.capacity:
-            continue
-
-        self.merge_routes(n1, n2)
-
-        self.sol.cost -= sav.score
-
-
-    def calculate_savings(self):
-        savings = []
-        for i in range(0, len(self.customers)):
-            n1 = self.customers[i]
-            for j in range(i + 1, len(self.customers)):
-                n2 = self.customers[j]
-    
-                score = self.distance_matrix[n1.ID][self.depot.ID]
-                score += self.distance_matrix[self.depot.ID][n2.ID]
-                score -= self.distance_matrix[n1.ID][n2.ID]
-    
-                sav = Saving(n1, n2, score)
-                savings.append(sav)
-        return savings
-
-
-    def create_initial_routes(self):
-        s = Solution()
-        for i in range(0, len(self.customers)):
-            n = self.customers[i]
-            rt = Route(self.depot, self.capacity)
-            n.route = rt
-            n.position_in_route = 1
-            rt.sequenceOfNodes.insert(1, n)
-            rt.load = n.demand
-            rt.cost = self.calc_tonne_kilometre_route(rt)
-            s.routes.append(rt)
-            s.cost += rt.cost
-        return s
-
-
-    def not_first_or_last(self, rt, n):
-        if n.position_in_route != 1 and n.position_in_route != len(rt.sequenceOfNodes) - 2:
-            return True
-        return False
-
-
-    def merge_routes(self, n1, n2):
-        rt1 = n1.route
-        rt2 = n2.route
-    
-        if n1.position_in_route == 1 and n2.position_in_route == len(rt2.sequenceOfNodes) - 2:
-            rt1.sequenceOfNodes[1:1] = rt2.sequenceOfNodes[1:len(rt2.sequenceOfNodes) - 1]
-        elif n1.position_in_route == 1 and n2.position_in_route == 1:
-            rt1.sequenceOfNodes[1:1] = rt2.sequenceOfNodes[len(rt2.sequenceOfNodes) - 2:0:-1]
-        elif n1.position_in_route == len(rt1.sequenceOfNodes) - 2 and n2.position_in_route == 1:
-            rt1.sequenceOfNodes[len(rt1.sequenceOfNodes) - 1:len(rt1.sequenceOfNodes) - 1] = rt2.sequenceOfNodes[
-                                                                                             1:len(rt2.sequenceOfNodes) - 1]
-        elif n1.position_in_route == len(rt1.sequenceOfNodes) - 2 and n2.position_in_route == len(rt2.sequenceOfNodes) - 2:
-            rt1.sequenceOfNodes[len(rt1.sequenceOfNodes) - 1:len(rt1.sequenceOfNodes) - 1] = rt2.sequenceOfNodes[
-                                                                                             len(rt2.sequenceOfNodes) - 2:0:-1]
-        rt1.load += rt2.load
-        self.sol.routes.remove(rt2)
-        self.update_route_customers(rt1)
-
-
-    def update_route_customers(self, rt):
-        for i in range(1, len(rt.sequenceOfNodes) - 1):
-            n = rt.sequenceOfNodes[i]
-            n.route = rt
-            n.position_in_route = i
-
-
-
-    
     def calc_tonne_kilometre_route(self, rt):
         nodes_sequence = rt.sequenceOfNodes
         tot_dem = sum(n.demand for n in nodes_sequence)
         tot_load = 8 + tot_dem
         tn_km = 0
-        for i in range(len(nodes_sequence) - 1):
-           from_node = nodes_sequence[i]
-           to_node = nodes_sequence[i + 1]
-           tn_km += self.distance_matrix[from_node.ID][to_node.ID] * tot_load
-           tot_load -= to_node.demand
+        for i in range(len(nodes_sequence) - 2):
+            from_node = nodes_sequence[i]
+            to_node = nodes_sequence[i + 1]
+            tn_km +=self.distance(from_node,to_node) * tot_load
+            tot_load -= to_node.demand
+        rt.cost = tn_km
         return tn_km
 
-
     def calc_tonne_kilometre_total(self, sol):
+        # sol.cost = 0
         solution_tonne_kilometre_sum = 0
+        i =0
+
         for rt in sol.routes:
+            i+=1
             route_sum = self.calc_tonne_kilometre_route(rt)
-            solution_tonne_kilometre_sum += route_sum
+            solution_tonne_kilometre_sum += rt.cost
+
         sol.cost = solution_tonne_kilometre_sum
         return solution_tonne_kilometre_sum
 
     def solve(self):
         self.SetRoutedFlagToFalseForAllCustomers()
         self.ApplyNearestNeighborMethod()
+
         # self.MinimumInsertionsStochastic()
-        self.ReportSolution(self.sol)
-        self.VND()
-        # self.LocalSearch(2)
+        # self.Clarke_n_Wright()
+        self.calc_tonne_kilometre_total(self.sol)
         # self.ReportSolution(self.sol)
+        self.VND()
+        self.LocalSearch(2)
+        self.calc_tonne_kilometre_total(self.sol)
+        # self.ReportSolution(self.sol)
+
         return self.sol
 
     def SetRoutedFlagToFalseForAllCustomers(self):
@@ -286,8 +223,8 @@ class Solver:
                 model_is_feasible = False
                 break
 
-        if model_is_feasible:
-            self.TestSolution()
+        # if model_is_feasible:
+        #     self.TestSolution()
 
     def IdentifyMinimumCostInsertionCandidates(self):
         """
@@ -356,7 +293,7 @@ class Solver:
         top = TwoOptMove()
 
         while terminationCondition is False:
-            operator = random.randint(0,2)
+            operator = random.randint(0, 2)
             self.InitializeOperators(rm, sm, top)
             # SolDrawer.draw(localSearchIterator, self.sol, self.allNodes)
             # Relocations
@@ -368,42 +305,124 @@ class Solver:
                         self.ApplyRelocationMove(rm)
                         # print(localSearchIterator, self.sol.cost, operator)
                     else:
-                        #self.penalize_arcs()
+                        # self.penalize_arcs()
                         localSearchIterator = localSearchIterator - 1
             # Swaps
             elif operator == 1:
                 self.FindBestSwapMove(sm)
                 if sm.positionOfFirstRoute is not None:
-                     # if sm.moveCost_penalized < 0:
+                    # if sm.moveCost_penalized < 0:
                     if sm.moveCost < 0:
                         self.ApplySwapMove(sm)
                         # print(localSearchIterator, self.sol.cost, operator)
                     else:
-                        #self.penalize_arcs()
+                        # self.penalize_arcs()
                         localSearchIterator = localSearchIterator - 1
             elif operator == 2:
                 self.FindBestTwoOptMove(top)
                 if top.positionOfFirstRoute is not None:
-                    #if top.moveCost_penalized < 0:
+                    # if top.moveCost_penalized < 0:
                     if top.moveCost < 0:
                         self.ApplyTwoOptMove(top)
                         # print(localSearchIterator, self.sol.cost, operator)
                     else:
-                        #self.penalize_arcs()
+                        # self.penalize_arcs()
                         localSearchIterator = localSearchIterator - 1
 
-            self.TestSolution()
+            # self.TestSolution()
 
             if (self.sol.cost < self.bestSolution.cost):
                 self.bestSolution = self.cloneSolution(self.sol)
-                print(localSearchIterator, self.bestSolution.cost)
+                # print(localSearchIterator, self.bestSolution.cost)
 
             localSearchIterator = localSearchIterator + 1
-            if localSearchIterator == 1000:
+            if localSearchIterator == 700:
                 terminationCondition = True
 
         self.sol = self.bestSolution
         SolDrawer.draw(self.bestSolution.cost, self.sol, self.allNodes)
+
+    def Clarke_n_Wright(self):
+        self.sol = self.create_initial_routes()
+        savings: list = self.calculate_savings()
+        savings.sort(key=lambda s: s.score, reverse=True)
+        for i in range(0, len(savings)):
+            sav = savings[i]
+            n1 = sav.n1
+            n2 = sav.n2
+            rt1 = n1.route
+            rt2 = n2.route
+
+            if n1.route == n2.route:
+                continue
+            if self.not_first_or_last(rt1, n1) or self.not_first_or_last(rt2, n2):
+                continue
+            if rt1.load + rt2.load > self.capacity:
+                continue
+
+            self.merge_routes(n1, n2)
+
+            self.sol.cost -= sav.score
+
+    def calculate_savings(self):
+        savings = []
+        for i in range(0, len(self.customers)):
+            n1 = self.customers[i]
+            for j in range(i + 1, len(self.customers)):
+                n2 = self.customers[j]
+
+                score = self.distance_matrix[n1.ID][self.depot.ID]
+                score += self.distance_matrix[self.depot.ID][n2.ID]
+                score -= self.distance_matrix[n1.ID][n2.ID]
+
+                sav = Saving(n1, n2, score)
+                savings.append(sav)
+        return savings
+
+    def create_initial_routes(self):
+        s = Solution()
+        for i in range(0, len(self.customers)):
+            n = self.customers[i]
+            rt = Route(self.depot, self.capacity)
+            n.route = rt
+            n.position_in_route = 1
+            rt.sequenceOfNodes.insert(1, n)
+            rt.load = n.demand
+            rt.cost = self.calc_tonne_kilometre_route(rt)
+            s.routes.append(rt)
+            s.cost += rt.cost
+        return s
+
+    def not_first_or_last(self, rt, n):
+        if n.position_in_route != 1 and n.position_in_route != len(rt.sequenceOfNodes) - 2:
+            return True
+        return False
+
+    def merge_routes(self, n1, n2):
+        rt1 = n1.route
+        rt2 = n2.route
+
+        if n1.position_in_route == 1 and n2.position_in_route == len(rt2.sequenceOfNodes) - 2:
+            rt1.sequenceOfNodes[1:1] = rt2.sequenceOfNodes[1:len(rt2.sequenceOfNodes) - 1]
+        elif n1.position_in_route == 1 and n2.position_in_route == 1:
+            rt1.sequenceOfNodes[1:1] = rt2.sequenceOfNodes[len(rt2.sequenceOfNodes) - 2:0:-1]
+        elif n1.position_in_route == len(rt1.sequenceOfNodes) - 2 and n2.position_in_route == 1:
+            rt1.sequenceOfNodes[len(rt1.sequenceOfNodes) - 1:len(rt1.sequenceOfNodes) - 1] = rt2.sequenceOfNodes[
+                                                                                             1:len(
+                                                                                                 rt2.sequenceOfNodes) - 1]
+        elif n1.position_in_route == len(rt1.sequenceOfNodes) - 2 and n2.position_in_route == len(
+                rt2.sequenceOfNodes) - 2:
+            rt1.sequenceOfNodes[len(rt1.sequenceOfNodes) - 1:len(rt1.sequenceOfNodes) - 1] = rt2.sequenceOfNodes[
+                                                                                             len(rt2.sequenceOfNodes) - 2:0:-1]
+        rt1.load += rt2.load
+        self.sol.routes.remove(rt2)
+        self.update_route_customers(rt1)
+
+    def update_route_customers(self, rt):
+        for i in range(1, len(rt.sequenceOfNodes) - 1):
+            n = rt.sequenceOfNodes[i]
+            n.route = rt
+            n.position_in_route = i
 
     def cloneRoute(self, rt: Route):
         cloned = Route(self.depot, self.capacity)
@@ -421,9 +440,7 @@ class Solver:
         cloned.cost = self.sol.cost
         return cloned
 
-    
-
-    #with penalized and target/origin
+    # with penalized and target/origin
     def FindBestRelocationMove(self, rm):
         for originRouteIndex in range(0, len(self.sol.routes)):
             rt1: Route = self.sol.routes[originRouteIndex]
@@ -447,34 +464,31 @@ class Solver:
                             if rt2.load + B.demand > rt2.capacity:
                                 continue
 
-
                         d_after_ornode = sum(node.demand for node in rt1.sequenceOfNodes[originNodeIndex + 1:])
                         d_after_tarnode = sum(node.demand for node in rt2.sequenceOfNodes[targetNodeIndex + 1:])
 
-                        if rt1 == rt2 :
-                            cost_added =0
+                        if rt1 == rt2:
+                            cost_added = 0
                             cost_removed = 0
 
                             # cost_added_penalized = 0
                             # cost_removed_penalized = 0
 
-
                             if originNodeIndex < targetNodeIndex:
-                                #calculates the extra cost that occurs from the demand of the node 
+                                # calculates the extra cost that occurs from the demand of the node
                                 for i in range(originNodeIndex + 1, targetNodeIndex):
                                     nextnode = i + 1
                                     n1 = rt2.sequenceOfNodes[i]
                                     n2 = rt2.sequenceOfNodes[nextnode]
                                     cost_added += B.demand * self.distance_matrix[n1.ID][n2.ID]
                                     # cost_added_penalized += B.demand * self.distance_matrix[n1.ID][n2.ID]
-                            #T=10
-                                cost_added += self.distance_matrix[A.ID][C.ID] * (d_after_ornode + B.demand + 8)+ \
-                                    self.distance_matrix[F.ID][B.ID] * (d_after_tarnode + B.demand + 8) + \
-                                    self.distance_matrix[B.ID][G.ID] * (d_after_tarnode + 8)
+                                # T=10
+                                cost_added += self.distance_matrix[A.ID][C.ID] * (d_after_ornode + B.demand + 8) + \
+                                              self.distance_matrix[F.ID][B.ID] * (d_after_tarnode + B.demand + 8) + \
+                                              self.distance_matrix[B.ID][G.ID] * (d_after_tarnode + 8)
                                 cost_removed = self.distance_matrix[A.ID][B.ID] * (d_after_ornode + B.demand + 8) - \
-                                    self.distance_matrix[B.ID][C.ID] * (d_after_ornode + 8) - \
-                                    self.distance_matrix[F.ID][G.ID] * (d_after_tarnode + 8)
-                                
+                                               self.distance_matrix[B.ID][C.ID] * (d_after_ornode + 8) - \
+                                               self.distance_matrix[F.ID][G.ID] * (d_after_tarnode + 8)
 
                                 # cost_added_penalized += self.distance_matrix_penalized[A.ID][C.ID] * (d_after_ornode + B.demand + 8)+ \
                                 #     self.distance_matrix_penalized[F.ID][B.ID] * (d_after_tarnode + B.demand + 8) + \
@@ -482,13 +496,13 @@ class Solver:
                                 # cost_removed_penalized = self.distance_matrix_penalized[A.ID][B.ID] * (d_after_ornode + B.demand + 8) - \
                                 #     self.distance_matrix_penalized[B.ID][C.ID] * (d_after_ornode + 8) - \
                                 #     self.distance_matrix_penalized[F.ID][G.ID] * (d_after_tarnode + 8)
-                                
 
-                            
 
-                        #if targetNodeIndex< originNodeIndex
-                            else :
-                                #calculates the removed cost that occurs from the fact that the node leaves the route earlier
+
+
+                            # if targetNodeIndex< originNodeIndex
+                            else:
+                                # calculates the removed cost that occurs from the fact that the node leaves the route earlier
                                 for i in range(targetNodeIndex + 1, originNodeIndex - 1):
                                     nextnode = i + 1
                                     n1 = rt2.sequenceOfNodes[i]
@@ -496,37 +510,33 @@ class Solver:
                                     cost_removed += B.demand * self.distance_matrix[n1.ID][n2.ID]
                                     # cost_removed_penalized += B.demand * self.distance_matrix[n1.ID][n2.ID]
 
-                            #T=10
-                                cost_added = self.distance_matrix[A.ID][C.ID] * (d_after_ornode + 8)+ \
-                                    self.distance_matrix[F.ID][B.ID] * (d_after_tarnode +  8) + \
-                                    self.distance_matrix[B.ID][G.ID] * (d_after_tarnode - B.demand + 8)
+                                # T=10
+                                cost_added = self.distance_matrix[A.ID][C.ID] * (d_after_ornode + 8) + \
+                                             self.distance_matrix[F.ID][B.ID] * (d_after_tarnode + 8) + \
+                                             self.distance_matrix[B.ID][G.ID] * (d_after_tarnode - B.demand + 8)
                                 cost_removed += self.distance_matrix[A.ID][B.ID] * (d_after_ornode + B.demand + 8) - \
-                                    self.distance_matrix[B.ID][C.ID] * (d_after_ornode + 8) - \
-                                    self.distance_matrix[F.ID][G.ID] * (d_after_tarnode + 8)
-                                
+                                                self.distance_matrix[B.ID][C.ID] * (d_after_ornode + 8) - \
+                                                self.distance_matrix[F.ID][G.ID] * (d_after_tarnode + 8)
 
-                        
                                 # cost_added_penalized = self.distance_matrix_penalized[A.ID][C.ID] * (d_after_ornode + 8)+ \
                                 #     self.distance_matrix_penalized[F.ID][B.ID] * (d_after_tarnode +  8) + \
                                 #     self.distance_matrix_penalized[B.ID][G.ID] * (d_after_tarnode - B.demand + 8)
                                 # cost_removed_penalized += self.distance_matrix_penalized[A.ID][B.ID] * (d_after_ornode + B.demand + 8) - \
                                 #     self.distance_matrix_penalized[B.ID][C.ID] * (d_after_ornode + 8) - \
                                 #     self.distance_matrix_penalized[F.ID][G.ID] * (d_after_tarnode + 8)
-                            
-                            
+
                             moveCost = cost_added - cost_removed
 
                             originRtCostChange = moveCost
                             targetRtCostChange = moveCost
 
                             # moveCost_penalized = cost_added_penalized - cost_removed_penalized
-                        #if rt1 != rt2
-                        else :
+                        # if rt1 != rt2
+                        else:
                             cost_rt1 = 0
                             cost_rt2 = 0
                             # cost_rt1_penalized = 0
                             # cost_rt2_penalized = 0
-
 
                             for i in range(0, originNodeIndex - 1):
                                 nextnode = i + 1
@@ -534,13 +544,12 @@ class Solver:
                                 n2 = rt1.sequenceOfNodes[nextnode]
                                 cost_rt1 -= B.demand * self.distance_matrix[n1.ID][n2.ID]
                                 # cost_rt1_penalized -= B.demand * self.distance_matrix[n1.ID][n2.ID]
-                            
+
                             cost_rt1 += self.distance_matrix[A.ID][C.ID] * (d_after_ornode + 8) - \
-                                self.distance_matrix[A.ID][B.ID] * (d_after_ornode + B.demand + 8) - \
-                                self.distance_matrix[B.ID][C.ID] * (d_after_ornode + 8)
-                            
+                                        self.distance_matrix[A.ID][B.ID] * (d_after_ornode + B.demand + 8) - \
+                                        self.distance_matrix[B.ID][C.ID] * (d_after_ornode + 8)
+
                             originRtCostChange = cost_rt1
-                            
 
                             # cost_rt1_penalized += self.distance_matrix_penalized[A.ID][C.ID] * (d_after_ornode + 8) - \
                             #     self.distance_matrix_penalized[A.ID][B.ID] * (d_after_ornode + B.demand + 8) - \
@@ -554,89 +563,98 @@ class Solver:
                                 # cost_rt2_penalized += B.demand * self.distance_matrix[n1.ID][n2.ID]
 
                             cost_rt2 += self.distance_matrix[F.ID][B.ID] * (d_after_tarnode + B.demand + 8) + \
-                                self.distance_matrix[B.ID][G.ID] * (d_after_tarnode + 8) - \
-                                self.distance_matrix[F.ID][G.ID] * (d_after_tarnode + 8)
-                            
+                                        self.distance_matrix[B.ID][G.ID] * (d_after_tarnode + 8) - \
+                                        self.distance_matrix[F.ID][G.ID] * (d_after_tarnode + 8)
+
                             targetRtCostChange = cost_rt2
-                            
+
                             # cost_rt2_penalized+= self.distance_matrix_penalized[F.ID][B.ID] * (d_after_tarnode + B.demand + 8) + \
                             #     self.distance_matrix_penalized[B.ID][G.ID] * (d_after_tarnode + 8) - \
                             #     self.distance_matrix_penalized[F.ID][G.ID] * (d_after_tarnode + 8)
 
                             moveCost = originRtCostChange + targetRtCostChange
 
-                            moveCost_penalized = cost_rt1_penalized + cost_rt2_penalized
-                        #if (moveCost_penalized < rm.moveCost_penalized):
-                        if (moveCost < rm.moveCost):
+                            # moveCost_penalized = cost_rt1_penalized + cost_rt2_penalized
+                        # if (moveCost_penalized < rm.moveCost_penalized):
+                        if (moveCost < rm.moveCost and moveCost!=0):
                             self.StoreBestRelocationMove(originRouteIndex, targetRouteIndex, originNodeIndex,
-                                                         targetNodeIndex, moveCost , originRtCostChange,
+                                                         targetNodeIndex, moveCost, originRtCostChange,
                                                          targetRtCostChange, rm)
 
-        def FindBestSwapMove(self, sm):
-        heap = []
-
+    def FindBestSwapMove(self, sm):
         for firstRouteIndex in range(0, len(self.sol.routes)):
             rt1: Route = self.sol.routes[firstRouteIndex]
-            pr1 = rt1.cost
             for secondRouteIndex in range(firstRouteIndex, len(self.sol.routes)):
                 rt2: Route = self.sol.routes[secondRouteIndex]
-                pr2 = rt2.cost
                 for firstNodeIndex in range(1, len(rt1.sequenceOfNodes) - 1):
                     startOfSecondNodeIndex = 1
                     if rt1 == rt2:
                         startOfSecondNodeIndex = firstNodeIndex + 1
                     for secondNodeIndex in range(startOfSecondNodeIndex, len(rt2.sequenceOfNodes) - 1):
-                        b1 = rt1.sequenceOfNodes[firstNodeIndex]
-                        b2 = rt2.sequenceOfNodes[secondNodeIndex]
 
-                        if rt1 != rt2:
-                            if rt1.load - b1.demand + b2.demand > self.capacity or \
-                                    rt2.load - b2.demand + b1.demand > self.capacity:
+                        a1 = rt1.sequenceOfNodes[firstNodeIndex - 1]
+                        b1 = rt1.sequenceOfNodes[firstNodeIndex]
+                        c1 = rt1.sequenceOfNodes[firstNodeIndex + 1]
+
+                        a2 = rt2.sequenceOfNodes[secondNodeIndex - 1]
+                        b2 = rt2.sequenceOfNodes[secondNodeIndex]
+                        c2 = rt2.sequenceOfNodes[secondNodeIndex + 1]
+
+                        moveCost = None
+                        costChangeFirstRoute = None
+                        costChangeSecondRoute = None
+
+                        if rt1 == rt2:
+                            if firstNodeIndex == secondNodeIndex - 1:
+                                costRemoved = self.distance_matrix[a1.ID][b1.ID] + self.distance_matrix[b1.ID][b2.ID] + \
+                                              self.distance_matrix[b2.ID][c2.ID]
+                                costAdded = self.distance_matrix[a1.ID][b2.ID] + self.distance_matrix[b2.ID][b1.ID] + \
+                                            self.distance_matrix[b1.ID][c2.ID]
+                                moveCost = costAdded - costRemoved
+
+                                # costRemoved_penalized = self.distance_matrix_penalized[a1.ID][b1.ID] + self.distance_matrix_penalized[b1.ID][b2.ID] + \
+                                #                         self.distance_matrix_penalized[b2.ID][c2.ID]
+                                # costAdded_penalized = self.distance_matrix_penalized[a1.ID][b2.ID] + self.distance_matrix_penalized[b2.ID][b1.ID] + \
+                                #                       self.distance_matrix_penalized[b1.ID][c2.ID]
+                                # moveCost_penalized = costAdded_penalized - costRemoved_penalized
+
+                            else:
+                                costRemoved1 = self.distance_matrix[a1.ID][b1.ID] + self.distance_matrix[b1.ID][c1.ID]
+                                costAdded1 = self.distance_matrix[a1.ID][b2.ID] + self.distance_matrix[b2.ID][c1.ID]
+                                costRemoved2 = self.distance_matrix[a2.ID][b2.ID] + self.distance_matrix[b2.ID][c2.ID]
+                                costAdded2 = self.distance_matrix[a2.ID][b1.ID] + self.distance_matrix[b1.ID][c2.ID]
+                                moveCost = costAdded1 + costAdded2 - (costRemoved1 + costRemoved2)
+                                # costRemoved1_penalized = self.distance_matrix_penalized[a1.ID][b1.ID] + self.distance_matrix_penalized[b1.ID][c1.ID]
+                                # costAdded1_penalized = self.distance_matrix_penalized[a1.ID][b2.ID] + self.distance_matrix_penalized[b2.ID][c1.ID]
+                                # costRemoved2_penalized = self.distance_matrix_penalized[a2.ID][b2.ID] + self.distance_matrix_penalized[b2.ID][c2.ID]
+                                # costAdded2_penalized = self.distance_matrix_penalized[a2.ID][b1.ID] + self.distance_matrix_penalized[b1.ID][c2.ID]
+                                # moveCost_penalized = costAdded1_penalized + costAdded2_penalized - (costRemoved1_penalized + costRemoved2_penalized)
+                        else:
+                            if rt1.load - b1.demand + b2.demand > self.capacity:
+                                continue
+                            if rt2.load - b2.demand + b1.demand > self.capacity:
                                 continue
 
-                            rt1.sequenceOfNodes[firstNodeIndex] = b2
-                            rt2.sequenceOfNodes[secondNodeIndex] = b1
-                            cost1, d1 = self.calculate_route_details(rt1.sequenceOfNodes, 6)
-                            cost2, d2 = self.calculate_route_details(rt2.sequenceOfNodes, 6)
-                            rt1.sequenceOfNodes[firstNodeIndex] = b1
-                            rt2.sequenceOfNodes[secondNodeIndex] = b2
-                            moveCost = - pr1 - pr2 + cost1 + cost2
-                            costChangeFirstRoute = - pr1 + cost1
-                            costChangeSecondRoute = - pr2 + cost2
-                        else:
-                            rt1.sequenceOfNodes[firstNodeIndex] = b2
-                            rt1.sequenceOfNodes[secondNodeIndex] = b1
-                            cost1, d1 = self.calculate_route_details(rt1.sequenceOfNodes, 6)
-                            rt1.sequenceOfNodes[firstNodeIndex] = b1
-                            rt1.sequenceOfNodes[secondNodeIndex] = b2
-                            moveCost = - pr1 + cost1
-                            costChangeFirstRoute = - pr1 + cost1
-                            costChangeSecondRoute = costChangeFirstRoute
+                            costRemoved1 = self.distance_matrix[a1.ID][b1.ID] + self.distance_matrix[b1.ID][c1.ID]
+                            costAdded1 = self.distance_matrix[a1.ID][b2.ID] + self.distance_matrix[b2.ID][c1.ID]
+                            costRemoved2 = self.distance_matrix[a2.ID][b2.ID] + self.distance_matrix[b2.ID][c2.ID]
+                            costAdded2 = self.distance_matrix[a2.ID][b1.ID] + self.distance_matrix[b1.ID][c2.ID]
+                            # costRemoved1_penalized = self.distance_matrix_penalized[a1.ID][b1.ID] + self.distance_matrix_penalized[b1.ID][c1.ID]
+                            # costAdded1_penalized = self.distance_matrix_penalized[a1.ID][b2.ID] + self.distance_matrix_penalized[b2.ID][c1.ID]
+                            # costRemoved2_penalized = self.distance_matrix_penalized[a2.ID][b2.ID] + self.distance_matrix_penalized[b2.ID][c2.ID]
+                            # costAdded2_penalized = self.distance_matrix_penalized[a2.ID][b1.ID] + self.distance_matrix_penalized[b1.ID][c2.ID]
 
-                        # Αποθήκευση πιθανής κίνησης στο heap
-                        if moveCost < sm.moveCost and abs(moveCost) > 0.0001:
-                            heapq.heappush(heap, (moveCost, firstRouteIndex, secondRouteIndex,
-                                                  firstNodeIndex, secondNodeIndex,
-                                                  costChangeFirstRoute, costChangeSecondRoute))
+                            costChangeFirstRoute = costAdded1 - costRemoved1
+                            costChangeSecondRoute = costAdded2 - costRemoved2
 
+                            moveCost = costAdded1 + costAdded2 - (costRemoved1 + costRemoved2)
+                            # moveCost_penalized = costAdded1_penalized + costAdded2_penalized - (
+                            #             costRemoved1_penalized + costRemoved2_penalized)
 
-        if heap:
-            bestMove = heapq.heappop(heap)
-            self.StoreBestSwapMove(bestMove[1], bestMove[2], bestMove[3], bestMove[4],
-                                   bestMove[0], bestMove[5], bestMove[6], sm)
-
-        return sm
-
-    def calculate_route_details(self, nodes_sequence, empty_vehicle_weight):
-        tot_dem = sum(n.demand for n in nodes_sequence)
-        tot_load = empty_vehicle_weight + tot_dem
-        tn_km = 0
-        for i in range(len(nodes_sequence) - 1):
-            from_node = nodes_sequence[i]
-            to_node = nodes_sequence[i + 1]
-            tn_km += self.distance_matrix[from_node.ID][to_node.ID] * tot_load
-            tot_load -= to_node.demand
-        return tn_km, tot_dem
+                        # if moveCost_penalized < sm.moveCost_penalized:
+                        if moveCost < sm.moveCost and moveCost!=0:
+                            self.StoreBestSwapMove(firstRouteIndex, secondRouteIndex, firstNodeIndex, secondNodeIndex,
+                                                   moveCost, costChangeFirstRoute, costChangeSecondRoute, sm)
 
     def ApplyRelocationMove(self, rm: RelocationMove):
 
@@ -664,6 +682,7 @@ class Solver:
             targetRt.load += B.demand
 
         self.sol.cost += rm.moveCost
+        return
 
         # newCost = self.CalculateTotalCost(self.sol)
         # debuggingOnly
@@ -701,7 +720,7 @@ class Solver:
             for j in range(0, len(rt.sequenceOfNodes) - 1):
                 print(rt.sequenceOfNodes[j].ID, end=' ')
             print(f'Cost: {rt.cost} Load: {rt.load}')
-        print(total_tonne_kilometre)
+        print(sol.cost)
 
     def GetLastOpenRoute(self):
         if len(self.sol.routes) == 0:
@@ -768,7 +787,7 @@ class Solver:
         insCustomer.isRouted = True
 
     def StoreBestRelocationMove(self, originRouteIndex, targetRouteIndex, originNodeIndex, targetNodeIndex, moveCost,
-                                 originRtCostChange, targetRtCostChange, rm: RelocationMove):
+                                originRtCostChange, targetRtCostChange, rm: RelocationMove):
         rm.originRoutePosition = originRouteIndex
         rm.originNodePosition = originNodeIndex
         rm.targetRoutePosition = targetRouteIndex
@@ -776,7 +795,7 @@ class Solver:
         rm.costChangeOriginRt = originRtCostChange
         rm.costChangeTargetRt = targetRtCostChange
         rm.moveCost = moveCost
-        #rm.moveCost_penalized = moveCost_penalized
+        # rm.moveCost_penalized = moveCost_penalized
 
     def StoreBestSwapMove(self, firstRouteIndex, secondRouteIndex, firstNodeIndex, secondNodeIndex, moveCost,
                           costChangeFirstRoute, costChangeSecondRoute, sm):
@@ -787,9 +806,9 @@ class Solver:
         sm.costChangeFirstRt = costChangeFirstRoute
         sm.costChangeSecondRt = costChangeSecondRoute
         sm.moveCost = moveCost
-        #sm.moveCost_penalized = moveCost_penalized
+        # sm.moveCost_penalized = moveCost_penalized
 
-# Allagh
+    # Allagh
     def CalculateTotalCost(self, sol):
         c = 0
         for i in range(0, len(sol.routes)):
@@ -814,101 +833,111 @@ class Solver:
                     start2 = 0
                     if (rt1 == rt2):
                         start2 = nodeInd1 + 2
-    
+
                     for nodeInd2 in range(start2, len(rt2.sequenceOfNodes) - 1):
-    
-    
+
                         A = rt1.sequenceOfNodes[nodeInd1]
                         B = rt1.sequenceOfNodes[nodeInd1 + 1]
                         K = rt2.sequenceOfNodes[nodeInd2]
                         L = rt2.sequenceOfNodes[nodeInd2 + 1]
-    
+
                         if rt1 == rt2:
                             if nodeInd1 == 0 and nodeInd2 == len(rt1.sequenceOfNodes) - 2:
                                 continue
-    
+
                             rd1 = self.CalcRD(rt1, nodeInd1)
                             rd2 = self.CalcRD(rt2, nodeInd2)
-    
+
+                            reversedSegment = list(reversed(rt1.sequenceOfNodes[nodeInd1 + 1: nodeInd2 + 1]))
+                            d_after_target_node_rt1 = sum(node.demand for node in rt1.sequenceOfNodes[nodeInd2 + 1:])
+
                             extrac1 = 0
-                            current_load = rd2 + B.demand
+                            current_load = 8 + d_after_target_node_rt1 + B.demand
                             for i in range(nodeInd1 + 1, nodeInd2):
                                 n1 = rt1.sequenceOfNodes[i]
                                 n2 = rt1.sequenceOfNodes[i + 1]
                                 extrac1 += current_load * self.distance_matrix[n1.ID][n2.ID]
                                 current_load += n2.demand
-    
-                            current_load = rd2 + K.demand
+
+                            current_load = 8 + d_after_target_node_rt1 + K.demand
                             for i in range(nodeInd2, nodeInd1 + 1, -1):
                                 n2 = rt1.sequenceOfNodes[i]
                                 n1 = rt1.sequenceOfNodes[i - 1]
                                 extrac1 -= current_load * self.distance_matrix[n1.ID][n2.ID]
                                 current_load += n1.demand
-    
-    
+
+                            d_after_origin_node_rt1 = sum(
+                                node.demand for node in reversedSegment) + d_after_target_node_rt1
                             cost = 0
-    
-                            cost += self.distance_matrix[A.ID][K.ID] * (rd1) + \
-                                                self.distance_matrix[B.ID][L.ID] * (rd2 ) - \
-                                                self.distance_matrix[A.ID][B.ID] * (rd1 ) - \
-                                                self.distance_matrix[K.ID][L.ID] * (rd2 )
+
+                            cost += self.distance_matrix[A.ID][K.ID] * (d_after_origin_node_rt1 + 8) + \
+                                    self.distance_matrix[B.ID][L.ID] * (d_after_target_node_rt1 + 8) - \
+                                    self.distance_matrix[A.ID][B.ID] * (d_after_origin_node_rt1 + 8) - \
+                                    self.distance_matrix[K.ID][L.ID] * (d_after_target_node_rt1 + 8)
                             moveCost = cost + extrac1
+                            # if (moveCost < 0):
+                            #     print(cost, extrac1)
                         else:
                             if nodeInd1 == 0 and nodeInd2 == 0:
                                 continue
                             if nodeInd1 == len(rt1.sequenceOfNodes) - 2 and nodeInd2 == len(rt2.sequenceOfNodes) - 2:
                                 continue
-        
+
+                            if self.CapacityIsViolated(rt1, nodeInd1, rt2, nodeInd2):
+                                continue
+
                             rd1 = self.CalcRD(rt1, nodeInd1 - 1)
                             rd2 = self.CalcRD(rt2, nodeInd2 - 1)
-    
-                            if self.CapacityIsViolated(rt1, nodeInd1, rt2, nodeInd2, rd1, rd2):
-                                continue
-    
-    
+
                             cost_cummulative_change_rt1 = 0
                             for i in range(0, nodeInd1):
                                 next = i + 1
                                 n1 = rt1.sequenceOfNodes[i]
                                 n2 = rt1.sequenceOfNodes[next]
                                 cost_cummulative_change_rt1 += rd2 * self.distance_matrix[n1.ID][n2.ID] - \
-                                                                rd1 * self.distance_matrix[n1.ID][n2.ID]
-    
+                                                               rd1 * self.distance_matrix[n1.ID][n2.ID]
+
                             cost_cummulative_change_rt2 = 0
                             for i in range(0, nodeInd2):
                                 next = i + 1
                                 n1 = rt2.sequenceOfNodes[i]
                                 n2 = rt2.sequenceOfNodes[next]
                                 cost_cummulative_change_rt2 += rd1 * self.distance_matrix[n1.ID][n2.ID] - \
-                                                                rd2 * self.distance_matrix[n1.ID][n2.ID]
-    
+                                                               rd2 * self.distance_matrix[n1.ID][n2.ID]
+
                             costAdded = self.distance_matrix[A.ID][L.ID] * rd2 + \
                                         self.distance_matrix[K.ID][B.ID] * rd1
                             costRemoved = self.distance_matrix[A.ID][B.ID] * rd1 + \
-                                            self.distance_matrix[K.ID][L.ID] * rd2
-    
+                                          self.distance_matrix[K.ID][L.ID] * rd2
+
                             moveCost = costAdded - costRemoved + \
-                                        cost_cummulative_change_rt1 + cost_cummulative_change_rt2
-    
-                        if moveCost < top.moveCost and abs(moveCost) > 0.0001:
+                                       cost_cummulative_change_rt1 + cost_cummulative_change_rt2
+                            # if (moveCost < 0):
+                            #     print("ERROR")
+
+                        if moveCost < top.moveCost and abs(moveCost) > 0.0001 and top.moveCost >= 0:
                             self.StoreBestTwoOptMove(rtInd1, rtInd2, nodeInd1, nodeInd2, moveCost, top)
 
     def CalcRD(self, rt, nodeInd):
         rd = 8
-        for i in range(len(rt.sequenceOfNodes) - 1, nodeInd - 1, -1):     
+        for i in range(len(rt.sequenceOfNodes) - 1, nodeInd - 1, -1):
             rd = rd + rt.sequenceOfNodes[i].demand
 
         return rd
 
-    def CapacityIsViolated(self, rt1, nodeInd1, rt2, nodeInd2, rd1, rd2):
+    def CapacityIsViolated(self, rt1, nodeInd1, rt2, nodeInd2):
 
+        rt1FirstSegmentLoad = 0
+        for i in range(0, nodeInd1 + 1):
+            n = rt1.sequenceOfNodes[i]
+            rt1FirstSegmentLoad += n.demand
+        rt1SecondSegmentLoad = rt1.load - rt1FirstSegmentLoad
 
-        rt1FirstSegmentLoad = rt1.load - rd1 + rt1.sequenceOfNodes[nodeInd1].demand
-        rt1SecondSegmentLoad = rd1 - rt1.sequenceOfNodes[nodeInd1].demand
-
-        rt2FirstSegmentLoad = rt2.load - rd2 + rt2.sequenceOfNodes[nodeInd2].demand
-        rt2SecondSegmentLoad = rd2 - rt2.sequenceOfNodes[nodeInd2].demand
-
+        rt2FirstSegmentLoad = 0
+        for i in range(0, nodeInd2 + 1):
+            n = rt2.sequenceOfNodes[i]
+            rt2FirstSegmentLoad += n.demand
+        rt2SecondSegmentLoad = rt2.load - rt2FirstSegmentLoad
 
         if rt1FirstSegmentLoad + rt2SecondSegmentLoad > rt1.capacity:
             return True
@@ -965,7 +994,7 @@ class Solver:
         tn_km = 0
         for i in range(len(rt.sequenceOfNodes) - 1):
             from_node = rt.sequenceOfNodes[i]
-            to_node = rt.sequenceOfNodes[i+1]
+            to_node = rt.sequenceOfNodes[i + 1]
             tn_km += self.distance_matrix[from_node.ID][to_node.ID] * tot_load
             tot_load -= to_node.demand
         rt.cost = tn_km
@@ -1000,8 +1029,9 @@ class Solver:
                     for j in range(0, len(rt.sequenceOfNodes) - 1):
                         A = rt.sequenceOfNodes[j]
                         B = rt.sequenceOfNodes[j + 1]
-                        costAdded = self.distance_matrix[A.ID][candidateCust.ID] + self.distance_matrix[candidateCust.ID][
-                            B.ID]
+                        costAdded = self.distance_matrix[A.ID][candidateCust.ID] + \
+                                    self.distance_matrix[candidateCust.ID][
+                                        B.ID]
                         costRemoved = self.distance_matrix[A.ID][B.ID]
                         trialCost = costAdded - costRemoved
 
@@ -1044,78 +1074,78 @@ class Solver:
 
         pen_weight = 0.15
 
-        self.distance_matrix_penalized[pen_1][pen_2] = (1 + pen_weight * self.times_penalized[pen_1][pen_2]) * self.distance_matrix[pen_1][pen_2]
-        self.distance_matrix_penalized[pen_2][pen_1] = (1 + pen_weight * self.times_penalized[pen_2][pen_1]) * self.distance_matrix[pen_2][pen_1]
+        self.distance_matrix_penalized[pen_1][pen_2] = (1 + pen_weight * self.times_penalized[pen_1][pen_2]) * \
+                                                       self.distance_matrix[pen_1][pen_2]
+        self.distance_matrix_penalized[pen_2][pen_1] = (1 + pen_weight * self.times_penalized[pen_2][pen_1]) * \
+                                                       self.distance_matrix[pen_2][pen_1]
         self.penalized_n1_ID = pen_1
         self.penalized_n2_ID = pen_2
 
-    def write_to_file(solution, output_file):
-        with open(output_file, 'w') as file:
-        file.write(f'Cost:\n{solution.cost}\n')
-        file.write('Routes:\n')
-        file.write(str(len(solution.routes)) + '\n')
-        for route in solution.routes:
-            route_str = '0'
-            for node in route.sequenceOfNodes[1:len(route.sequenceOfNodes)-1]:  # The first node in each route is 0 and should not be repeated
-                route_str += ',' + str(node.ID)
-            file.write(route_str + '\n')
-
-
-
-
     def VND(self):
-        
+
         self.bestSolution = self.cloneSolution(self.sol)
         kmax = 2
         rm = RelocationMove()
         sm = SwapMove()
         top = TwoOptMove()
 
-        k = 0 
+        k = 0
 
         while k < kmax:
-            
+
             self.InitializeOperators(rm, sm, top)
             # SolDrawer.draw(localSearchIterator, self.sol, self.allNodes)
             # Relocations
             if k == 0:
-               
-               self.FindBestRelocationMove(rm)
-               if rm.originRoutePosition is not None and rm.moveCost < 0 : 
-                    self.ApplyRelocationMove(rm)
-                    k = 0  
-               else:
-                    #self.penalize_arcs()  
-                    k += 1  
 
-            # Swaps
+                self.FindBestRelocationMove(rm)
+                if rm.originRoutePosition is not None and rm.moveCost < 0:
+                    self.ApplyRelocationMove(rm)
+                    k = 0
+                else:
+                    # self.penalize_arcs()
+                    k += 1
+
+                    # Swaps
             elif k == 1:
 
-              self.FindBestSwapMove(sm)
-              if sm.positionOfFirstRoute is not None and sm.moveCost < 0 :
+                self.FindBestSwapMove(sm)
+                if sm.positionOfFirstRoute is not None and sm.moveCost < 0:
                     self.ApplySwapMove(sm)
-                    k = 0  
-              else:
-                    # self.penalize_arcs()  
-                    k += 1  
-   
+                    k = 0
+                else:
+                    # self.penalize_arcs()
+                    k += 1
+
 
             elif k == 2:
                 self.FindBestTwoOptMove(top)
                 if top.positionOfFirstRoute is not None and top.moveCost:
-                        self.ApplyTwoOptMove(top)
-                        k = 0  
+                    self.ApplyTwoOptMove(top)
+                    k = 0
                 else:
-                        # self.penalize_arcs()  
-                        k += 1 
+                    # self.penalize_arcs()
+                    k += 1
 
-
-            # self.TestSolution()
+                    # self.TestSolution()
 
             if (self.sol.cost < self.bestSolution.cost):
                 self.bestSolution = self.cloneSolution(self.sol)
-               
-
 
         self.sol = self.bestSolution
         # SolDrawer.draw(self.bestSolution.cost, self.sol, self.allNodes)
+
+
+def write_to_file(solution, output_file):
+    with open(output_file, 'w') as file:
+        file.write(f'Cost:\n{solution.cost}\n')
+        file.write('Routes:\n')
+        file.write(str(len(solution.routes)) + '\n')
+        for route in solution.routes:
+            route_str = '0'
+            for node in route.sequenceOfNodes[
+                        1:len(route.sequenceOfNodes) - 1]:  # The first node in each route is 0 and should not be repeated
+                route_str += ',' + str(node.ID)
+            file.write(route_str + '\n')
+
+
