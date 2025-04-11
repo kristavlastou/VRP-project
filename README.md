@@ -1,6 +1,6 @@
 # VRP Solver
 
-This repository provides a solution for the **Vehicle Routing Problem (VRP)** by minimizing **ton-kilometers** , using Local Search algorithms. The program reads an input file containing coordinates and demand values, computes the optimal routes, and stores the results in an output file.
+This is a group project that provides a solution for the **Vehicle Routing Problem (VRP)** by minimizing **ton-kilometers** , using Local Search algorithms. The program reads an input file containing coordinates and demand values, computes the optimal routes, and stores the results in an output file.
 
 ---
 
