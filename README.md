@@ -60,6 +60,5 @@ The program writes the computed VRP solution to `output.txt`, which includes the
 
 
 
-## License
-This project is licensed under the **MIT License**.
+
 
